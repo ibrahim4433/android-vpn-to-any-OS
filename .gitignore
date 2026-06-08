@@ -6,3 +6,6 @@ logs/*.csv
 
 # Temporary files
 *.tmp
+
+# Python cache
+__pycache__/
