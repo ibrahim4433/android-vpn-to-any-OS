@@ -1,0 +1,8 @@
+# Local credentials
+pass.txt
+
+# Benchmark outputs
+logs/*.csv
+
+# Temporary files
+*.tmp
