@@ -1,7 +1,15 @@
 # --- CONFIGURATION ---
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = (Resolve-Path (Join-Path $ScriptDir "..\..\")).Path
-$VpnDir = Join-Path $RepoRoot "configs\ovpn"
+
+$ConfigsDir = Join-Path $RepoRoot "configs"
+$NewestVpnDir = Get-ChildItem -Path $ConfigsDir -Directory -Filter "ovpn*" | Sort-Object Name -Descending | Select-Object -First 1
+if ($null -ne $NewestVpnDir) {
+    $VpnDir = $NewestVpnDir.FullName
+} else {
+    $VpnDir = Join-Path $ConfigsDir "ovpn"
+}
+
 $LogsDir = Join-Path $RepoRoot "logs\openvpn"
 $ResultsFile = Join-Path $RepoRoot "logs\vpn_benchmark_results_windows.csv"
 $PassFile = Join-Path $RepoRoot "pass.txt"
