@@ -5,7 +5,12 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-VPN_DIR="${VPN_DIR:-$REPO_ROOT/configs/ovpn}"
+NEWEST_OVPN_DIR=$(find "$REPO_ROOT/configs" -maxdepth 1 -type d -name "ovpn*" | sort -r | head -n 1)
+if [ -z "$NEWEST_OVPN_DIR" ]; then
+    NEWEST_OVPN_DIR="$REPO_ROOT/configs/ovpn"
+fi
+
+VPN_DIR="$NEWEST_OVPN_DIR"
 LOG_DIR="${LOG_DIR:-$REPO_ROOT/logs/openvpn}"
 RESULTS_FILE="${RESULTS_FILE:-$REPO_ROOT/logs/vpn_benchmark_results_linux.csv}"
 TEST_FILE_SIZE="${TEST_FILE_SIZE:-5000000}"
