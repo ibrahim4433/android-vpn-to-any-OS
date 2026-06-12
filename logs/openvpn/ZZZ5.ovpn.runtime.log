@@ -1,0 +1,6 @@
+1781299329.171062 40 DEPRECATED OPTION: --cipher set to 'AES-256-CBC' but missing in --data-ciphers (DEFAULT). OpenVPN ignores --cipher for cipher negotiations. 
+1781299329.173254 3 Note: Kernel support for ovpn-dco missing, disabling data channel offload.
+1781299329.174544 140 WARNING: cannot stat file 'pass.txt': No such file or directory (errno=2)
+1781299329.175155 9100 Options error: --auth-user-pass fails with 'pass.txt': No such file or directory (errno=2)
+1781299329.175645 b000 Options error: Please correct these errors.
+1781299329.176181 1040 Use --help for more information.
