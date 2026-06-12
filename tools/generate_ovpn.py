@@ -12,6 +12,7 @@ MANAGEMENT_RE = re.compile(r"^\s*management(?:-hold)?\b.*$", re.IGNORECASE | re.
 
 
 def extract_connections(default_content: str):
+    """Extract remote endpoint details from <connection> blocks."""
     connections = []
     for block_match in CONNECTION_BLOCK_RE.finditer(default_content):
         block = block_match.group(1)
@@ -26,6 +27,7 @@ def extract_connections(default_content: str):
 
 
 def clean_template(default_content: str) -> str:
+    """Build a base template without connection blocks or Android-only directives."""
     template = CONNECTION_BLOCK_RE.sub("", default_content)
     template = AUTH_USER_PASS_RE.sub("auth-user-pass pass.txt", template)
     template = MANAGEMENT_RE.sub("", template)
@@ -38,6 +40,7 @@ def clean_template(default_content: str) -> str:
 
 
 def inject_connection(template: str, connection: dict) -> str:
+    """Insert protocol/remote directives for a single generated profile."""
     insert_lines = []
     if connection.get("proto"):
         insert_lines.append(f"proto {connection['proto']}")
@@ -51,6 +54,7 @@ def inject_connection(template: str, connection: dict) -> str:
 
 
 def main() -> None:
+    """Generate timestamped OpenVPN profiles and copy pass.txt into output."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_root = os.path.dirname(script_dir)
 
@@ -74,7 +78,12 @@ def main() -> None:
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     output_dir = os.path.join(configs_root, f"ovpn-{timestamp}")
-    os.makedirs(output_dir, exist_ok=False)
+    try:
+        os.makedirs(output_dir, exist_ok=False)
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"Output directory already exists: {output_dir}. Wait one second and retry."
+        ) from exc
 
     shutil.copy2(pass_path, os.path.join(output_dir, "pass.txt"))
 
