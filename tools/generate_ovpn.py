@@ -51,6 +51,10 @@ def main():
     clean_template = re.sub(r'^management\s+.*$\n?', '', clean_template, flags=re.MULTILINE)
     clean_template = re.sub(r'^management-hold$\n?', '', clean_template, flags=re.MULTILINE)
 
+    # Remove deprecated options
+    clean_template = re.sub(r'^persist-key$\n?', '', clean_template, flags=re.MULTILINE)
+    clean_template = re.sub(r'^fast-io$\n?', '', clean_template, flags=re.MULTILINE)
+
     # Ensure empty lines left by removed blocks are cleaned up slightly (optional but makes it cleaner)
     clean_template = re.sub(r'\n{3,}', '\n\n', clean_template)
 

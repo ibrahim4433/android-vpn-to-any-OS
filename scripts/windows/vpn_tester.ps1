@@ -7,7 +7,21 @@ $ResultsFile = Join-Path $RepoRoot "logs\vpn_benchmark_results_windows.csv"
 $PassFile = Join-Path $RepoRoot "pass.txt"
 $TestFileSize = 25000000
 $Timeout = 15
-$OpenVpnExe = "C:\Program Files\OpenVPN\bin\openvpn.exe"
+
+# Auto-detect OpenVPN path
+$OpenVpnPaths = @(
+    "C:\Program Files\OpenVPN\bin\openvpn.exe",
+    "C:\Program Files (x86)\OpenVPN\bin\openvpn.exe",
+    "C:\Program Files\OpenVPN Connect\openvpn.exe"
+)
+
+$OpenVpnExe = $null
+foreach ($path in $OpenVpnPaths) {
+    if (Test-Path $path) {
+        $OpenVpnExe = $path
+        break
+    }
+}
 # ---------------------
 
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -21,8 +35,9 @@ if (-not (Test-Path $VpnDir)) {
     Exit 1
 }
 
-if (-not (Test-Path $OpenVpnExe)) {
-    Write-Host "ERROR: OpenVPN not found at $OpenVpnExe" -ForegroundColor Red
+if ($null -eq $OpenVpnExe -or -not (Test-Path $OpenVpnExe)) {
+    Write-Host "ERROR: openvpn.exe not found in common installation paths." -ForegroundColor Red
+    Write-Host "Please download and install the OpenVPN community GUI/CLI from: https://openvpn.net/community-downloads/" -ForegroundColor Yellow
     Exit 1
 }
 
@@ -101,7 +116,14 @@ foreach ($file in $ovpnFiles) {
         "$($file.Name),999,0" | Out-File -FilePath $ResultsFile -Append -Encoding UTF8
     }
 
-    Stop-Process -Name "openvpn" -Force -ErrorAction SilentlyContinue
+    # Cleanly kill OpenVPN process and avoid zombies
+    $openvpnProcs = Get-Process -Name "openvpn" -ErrorAction SilentlyContinue
+    if ($openvpnProcs) {
+        foreach ($proc in $openvpnProcs) {
+            $proc.Kill()
+            $proc.WaitForExit(3000)
+        }
+    }
     Start-Sleep -Seconds 3
 }
 

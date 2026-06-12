@@ -18,14 +18,48 @@ if [ ! -d "$VPN_DIR" ]; then
     exit 1
 fi
 
-if ! command -v openvpn >/dev/null 2>&1; then
-    echo "ERROR: openvpn command not found."
-    exit 1
+missing_deps=()
+for cmd in openvpn curl ping ip bc dos2unix; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        missing_deps+=("$cmd")
+    fi
+done
+
+if [ ${#missing_deps[@]} -ne 0 ]; then
+    echo "Missing dependencies: ${missing_deps[*]}. Attempting to install..."
+    # Map command names to Debian packages
+    packages=()
+    for cmd in "${missing_deps[@]}"; do
+        case "$cmd" in
+            openvpn) packages+=("openvpn") ;;
+            curl) packages+=("curl") ;;
+            ping) packages+=("iputils-ping") ;;
+            ip) packages+=("iproute2") ;;
+            bc) packages+=("bc") ;;
+            dos2unix) packages+=("dos2unix") ;;
+        esac
+    done
+
+    sudo apt-get update
+    sudo apt-get install -y "${packages[@]}"
+
+    # Re-check
+    missing_deps_again=()
+    for cmd in "${missing_deps[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_deps_again+=("$cmd")
+        fi
+    done
+
+    if [ ${#missing_deps_again[@]} -ne 0 ]; then
+        echo "ERROR: Failed to install missing dependencies: ${missing_deps_again[*]}"
+        exit 1
+    fi
 fi
 
-if ! command -v curl >/dev/null 2>&1 || ! command -v ping >/dev/null 2>&1 || ! command -v ip >/dev/null 2>&1 || ! command -v bc >/dev/null 2>&1; then
-    echo "ERROR: Missing required commands (curl, ping, ip, bc)."
-    exit 1
+# Run dos2unix on the ovpn configuration files before testing
+if ls "$VPN_DIR"/*.ovpn 1> /dev/null 2>&1; then
+    find "$VPN_DIR" -maxdepth 1 -name '*.ovpn' -exec dos2unix -q {} +
 fi
 
 echo "=========================================="
@@ -43,12 +77,24 @@ for config in "$VPN_DIR"/*.ovpn; do
     echo -n "Testing: $config_name ... "
 
     timeout_seconds=$((TIMEOUT + 6))
-    openvpn_status=0
-    if ! sudo timeout "${timeout_seconds}s" openvpn --config "$config" --connect-timeout "$TIMEOUT" --inactive 5 --ping-exit 5 --log "$log_file"; then
-        openvpn_status=$?
-    fi
 
-    if [ "$openvpn_status" -eq 0 ] || [ "$openvpn_status" -eq 124 ]; then
+    # Run OpenVPN in the background
+    sudo openvpn --config "$config" --connect-timeout "$TIMEOUT" --inactive 5 --ping-exit 5 --log "$log_file" &
+    OPENVPN_PID=$!
+
+    connected=false
+    start_time=$(date +%s)
+
+    # Wait for connection or timeout
+    while [ $(( $(date +%s) - start_time )) -lt $timeout_seconds ]; do
+        if grep -q "Initialization Sequence Completed" "$log_file" 2>/dev/null; then
+            connected=true
+            break
+        fi
+        sleep 0.5
+    done
+
+    if [ "$connected" = true ]; then
         ping_res=$(ping -c 2 -W 2 8.8.8.8 | tail -1 | awk -F '/' '{print $5}')
         [ -z "$ping_res" ] && ping_res="999"
 
@@ -62,9 +108,15 @@ for config in "$VPN_DIR"/*.ovpn; do
         echo "UP ($speed_mbps Mbps | $ping_res ms)"
         echo "$config_name,$ping_res,$speed_mbps" >> "$RESULTS_FILE"
     else
-        echo "FAILED"
+        echo "FAILED or TIMEOUT"
         echo "$config_name,TIMEOUT,0" >> "$RESULTS_FILE"
     fi
+
+    # Cleanly kill OpenVPN process and its children gracefully
+    sudo kill $OPENVPN_PID 2>/dev/null || true
+    sleep 1
+    sudo killall -9 openvpn 2>/dev/null || true
+
 done
 
 echo "=========================================="
