@@ -1,0 +1,96 @@
+<connection>
+remote 86.107.55.106 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.109 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.105 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.106 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.100 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.104 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.101 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.107 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.99 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.105 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.99 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.110 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.98 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.100 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.108 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.102 1195
+proto udp
+</connection>
+<connection>
+remote 86.107.55.103 1194
+proto udp
+</connection>
+<connection>
+remote 86.107.55.108 1194
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::4 1195
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::3 1195
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::2 1194
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::3 1194
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::2 1195
+proto udp
+</connection>
+<connection>
+remote 2a0d:5600:24:41::4 1194
+proto udp
+</connection>
